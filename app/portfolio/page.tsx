@@ -63,13 +63,6 @@ export default function PhotographyPortfolio() {
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background">      
       <div className="max-w-7xl mx-auto">
-        <motion.h1
-          className="text-5xl font-bold text-center text-foreground mb-12 cursor-pointer"
-          whileHover={{ scale: 1.1, color: '#1f2937' }} // Tailwind color for dark gray
-          transition={{ type: 'spring', stiffness: 300 }}
-        >
-          Guys Amazing Photos
-        </motion.h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {images.map((image, index) => (
             <motion.div

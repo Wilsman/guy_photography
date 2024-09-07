@@ -5,8 +5,15 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 export default function LandingPage() {
+  useEffect(() => {
+    // Example: Remove the attribute if it's added by a third-party script
+    document.querySelectorAll('[cz-shortcut-listen]').forEach((el) => {
+      el.removeAttribute('cz-shortcut-listen');
+    });
+  }, []);
+
   const [text, setText] = useState('')
-  const fullText = useMemo(() => 'Guy Danter Photography', [])
+  const fullText = useMemo(() => 'Guuy Danter Photography', [])
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
