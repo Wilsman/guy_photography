@@ -1,29 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { ImageOverlay } from './ImageOverlay' // Adjust the import path as necessary
 
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [images, setImages] = useState<string[]>([])
 
-  const images = [
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-    'https://picsum.photos/800/600?grayscale',
-  ]
+  useEffect(() => {
+    // Generate random numbers for the image URLs only once
+    const generatedImages = Array.from({ length: 12 }, () => `https://picsum.photos/seed/${Math.floor(Math.random() * 1000)}/800/600`)
+    setImages(generatedImages)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dotted-background dark:bg-slate-900">
@@ -59,23 +49,7 @@ export default function PhotographyPortfolio() {
       </div>
 
       {selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative">
-            <Image
-              src={selectedImage}
-              alt="Selected"
-              width={800}
-              height={600}
-              objectFit="contain"
-            />
-            <button
-              className="absolute top-0 right-0 m-4 text-white text-2xl"
-              onClick={() => setSelectedImage(null)}
-            >
-              &times;
-            </button>
-          </div>
-        </div>
+        <ImageOverlay image={selectedImage} onClose={() => setSelectedImage(null)} />
       )}
     </div>
   )
