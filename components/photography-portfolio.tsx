@@ -13,16 +13,25 @@ export default function PhotographyPortfolio() {
   const [isLoading, setIsLoading] = useState<boolean[]>([])
 
   useEffect(() => {
-    const generatedImages = Array.from({ length: 12 }, () => {
-      const seed = Math.floor(Math.random() * 1000)
-      return {
-        full: `https://picsum.photos/seed/${seed}/800/600`,
-        placeholder: `https://picsum.photos/seed/${seed}/20/15`
-      }
-    })
-    setImages(generatedImages)
-    setLoadingProgress(new Array(generatedImages.length).fill(0))
-    setIsLoading(new Array(generatedImages.length).fill(true))
+    const fetchImages = async () => {
+      const repoUrl = 'https://api.github.com/repos/Wilsman/guy_photography/contents/public/images'
+      const response = await fetch(repoUrl)
+      const data = await response.json()
+
+      const imageFiles = data.filter((file: any) => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/i))
+      const baseUrl = 'https://raw.githubusercontent.com/Wilsman/guy_photography/master/public/images'
+
+      const generatedImages = imageFiles.map((file: any) => ({
+        full: `${baseUrl}/${file.name}`,
+        placeholder: `${baseUrl}/${file.name}`
+      }))
+
+      setImages(generatedImages)
+      setLoadingProgress(new Array(generatedImages.length).fill(0))
+      setIsLoading(new Array(generatedImages.length).fill(true))
+    }
+
+    fetchImages()
   }, [])
 
   useEffect(() => {
