@@ -28,7 +28,7 @@ export default function PhotographyPortfolio() {
 
       const generatedImages = imageFiles.map((file: ImageFile) => ({
         full: `${baseUrl}/${file.name}`,
-        placeholder: `${baseUrl}/${file.name}`
+        placeholder: `${baseUrl}/${file.name}?w=10&h=10&fit=crop&auto=format`
       }))
 
       setImages(generatedImages)
@@ -55,16 +55,6 @@ export default function PhotographyPortfolio() {
             newLoading[index] = false;
             return newLoading; // Return the updated state
           });
-        };
-        img.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
-            setLoadingProgress((prevProgress) => {
-              const newProgress = [...prevProgress];
-              newProgress[index] = percentComplete;
-              return newProgress; // Return the updated state
-            });
-          }
         };
       });
     }
@@ -94,11 +84,11 @@ export default function PhotographyPortfolio() {
                 <Image
                   src={image.placeholder}
                   alt={`Placeholder Photography ${index + 1}`}
-                  layout="fill"
+                  fill
                   sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   style={{ objectFit: 'cover' }}
                   className="blur-sm shadow-sm border border-gray-300"
-                  priority={index < 3} // Add priority to the first few images
+                  loading="lazy" // Enable lazy loading
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Progress value={loadingProgress[index]} className="w-3/4 bg-gray-200" />
@@ -107,10 +97,11 @@ export default function PhotographyPortfolio() {
                   <Image
                     src={image.full}
                     alt={`Photography ${index + 1}`}
-                    layout="fill"
+                    fill
                     style={{ objectFit: 'cover' }}
                     sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="transition-transform duration-300 ease-in-out group-hover:scale-110 shadow-sm border border-gray-300"
+                    loading="lazy" // Enable lazy loading
                   />
                 )}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center">
