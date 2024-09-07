@@ -78,13 +78,16 @@ export default function PhotographyPortfolio() {
             >
               <div className="group aspect-w-4 aspect-h-3">
                 {isLoading[index] ? (
-                  <Image
-                    src={image.placeholder}
-                    alt={`Placeholder for Photography ${index + 1}`}
-                    layout="fill"
-                    objectFit="cover"
-                    className="blur-sm"
-                  />
+                  <>
+                    <Image
+                      src={image.placeholder}
+                      alt={`Placeholder for Photography ${index + 1}`}
+                      layout="fill"
+                      objectFit="cover"
+                      className="blur-sm"
+                    />
+                    <Progress value={loadingProgress[index]} />
+                  </>
                 ) : (
                   <Image
                     src={image.full}
