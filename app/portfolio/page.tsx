@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { ImageOverlay } from './ImageOverlay' // Adjust the import path as necessary
-import { Progress } from './ui/progress' // Adjust the import path as necessary
+import { ImageOverlay } from '../../components/ImageOverlay' // Adjust the import path as necessary
+import { Progress } from '../../components/ui/progress' // Adjust the import path as necessary
 
 type ImageFile = {
   name: string
@@ -61,7 +61,7 @@ export default function PhotographyPortfolio() {
   }, [images]);
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background">      
       <div className="max-w-7xl mx-auto">
         <motion.h1
           className="text-5xl font-bold text-center text-foreground mb-12 cursor-pointer"
