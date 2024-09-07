@@ -28,36 +28,36 @@ export default function PhotographyPortfolio() {
   useEffect(() => {
     if (images.length > 0) {
       images.forEach((image, index) => {
-        const img = new window.Image() // Use the native Image constructor
-        img.src = image.full
+        const img = new window.Image(); // Use the native Image constructor
+        img.src = image.full;
         img.onload = () => {
           setLoadingProgress((prevProgress) => {
-            const newProgress = [...prevProgress]
-            newProgress[index] = 100
-            return newProgress
-          })
+            const newProgress = [...prevProgress];
+            newProgress[index] = 100;
+            return newProgress; // Return the updated state
+          });
           setIsLoading((prevLoading) => {
-            const newLoading = [...prevLoading]
-            newLoading[index] = false
-            return newLoading
-          })
-        }
+            const newLoading = [...prevLoading];
+            newLoading[index] = false;
+            return newLoading; // Return the updated state
+          });
+        };
         img.onprogress = (event) => {
           if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100
+            const percentComplete = (event.loaded / event.total) * 100;
             setLoadingProgress((prevProgress) => {
-              const newProgress = [...prevProgress]
-              newProgress[index] = percentComplete
-              return newProgress
-            })
+              const newProgress = [...prevProgress];
+              newProgress[index] = percentComplete;
+              return newProgress; // Return the updated state
+            });
           }
-        }
-      })
+        };
+      });
     }
-  }, [images])
+  }, [images]);
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background dark:bg-slate-900">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background">
       <div className="max-w-7xl mx-auto">
         <motion.h1
           className="text-5xl font-bold text-center text-foreground mb-12 cursor-pointer"
@@ -77,24 +77,24 @@ export default function PhotographyPortfolio() {
               onClick={() => setSelectedImage(image.full)}
             >
               <div className="group aspect-w-4 aspect-h-3">
-                {isLoading[index] ? (
-                  <>
-                    <Image
-                      src={image.placeholder}
-                      alt={`Placeholder for Photography ${index + 1}`}
-                      layout="fill"
-                      objectFit="cover"
-                      className="blur-sm"
-                    />
-                    <Progress value={loadingProgress[index]} />
-                  </>
-                ) : (
+                <Image
+                  src={image.placeholder}
+                  alt={`Placeholder Photography ${index + 1}`}
+                  layout="fill"
+                  style={{ objectFit: 'cover' }}
+                  className="blur-sm shadow-sm border border-gray-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Progress value={loadingProgress[index]} className="w-3/4 bg-gray-200" />
+                </div>
+                {!isLoading[index] && (
                   <Image
                     src={image.full}
                     alt={`Photography ${index + 1}`}
                     layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 ease-in-out group-hover:scale-110"
+                    style={{ objectFit: 'cover' }}
+                    sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="transition-transform duration-300 ease-in-out group-hover:scale-110 shadow-sm border border-gray-300"
                   />
                 )}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center">
