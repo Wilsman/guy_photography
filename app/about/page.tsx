@@ -4,7 +4,7 @@ import React from 'react';
 
 const AboutPage = () => {
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background text-foreground dotted-background">
+    <div className="flex justify-center items-center min-h-screen bg-background text-foreground dotted-background p-4">
       <div className="max-w-lg w-full p-8 border border-border rounded-lg shadow-lg bg-card text-card-foreground">
         <h1 className="text-center text-2xl font-bold mb-6">About Guy Danter</h1>
         <p className="mb-4">
