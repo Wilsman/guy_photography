@@ -11,11 +11,14 @@ type ImageFile = {
   type: string
 }
 
+const IMAGES_PER_PAGE = 3; // Number of images to load per page
+
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [images, setImages] = useState<{ full: string, placeholder: string }[]>([])
   const [loadingProgress, setLoadingProgress] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState<boolean[]>([])
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -41,30 +44,40 @@ export default function PhotographyPortfolio() {
 
   useEffect(() => {
     if (images.length > 0) {
-      images.forEach((image, index) => {
+      const startIndex = (page - 1) * IMAGES_PER_PAGE;
+      const endIndex = startIndex + IMAGES_PER_PAGE;
+      const currentImages = images.slice(startIndex, endIndex);
+
+      currentImages.forEach((image, index) => {
         const img = new window.Image(); // Use the native Image constructor
         img.src = image.full;
         img.onload = () => {
           setLoadingProgress((prevProgress) => {
             const newProgress = [...prevProgress];
-            newProgress[index] = 100;
+            newProgress[startIndex + index] = 100;
             return newProgress; // Return the updated state
           });
           setIsLoading((prevLoading) => {
             const newLoading = [...prevLoading];
-            newLoading[index] = false;
+            newLoading[startIndex + index] = false;
             return newLoading; // Return the updated state
           });
         };
       });
     }
-  }, [images]);
+  }, [images, page]);
+
+  const loadMoreImages = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
+
+  const displayedImages = images.slice(0, page * IMAGES_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 dotted-background">      
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {images.map((image, index) => (
+          {displayedImages.map((image, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0 }}
@@ -106,6 +119,13 @@ export default function PhotographyPortfolio() {
             </motion.div>
           ))}
         </div>
+        {displayedImages.length < images.length && (
+          <div className="flex justify-center">
+            <button onClick={loadMoreImages} className="mt-8 px-4 py-2 bg-teal-500 text-white rounded">
+              Load More
+            </button>
+          </div>
+        )}
       </div>
 
       {selectedImage && (
