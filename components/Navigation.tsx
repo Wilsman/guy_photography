@@ -65,7 +65,9 @@ export default function Navigation() {
             </motion.div>
           )}
         </div>
-        <div className="text-white text-lg md:text-xl font-bold">Portfolio</div>
+        <Link href="/" passHref>
+          <div className="text-white text-lg md:text-xl font-bold cursor-pointer">Guy_Danter</div>
+        </Link>
         <div className="hidden md:flex space-x-4">
           <Link href="/" passHref>
             <motion.div

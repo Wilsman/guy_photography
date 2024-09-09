@@ -17,9 +17,9 @@ const BASE_URL = 'https://raw.githubusercontent.com/Wilsman/guy_photography/mast
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [images, setImages] = useState<{ full: string, placeholder: string }[]>([])
-  const [isLoading, setIsLoading] = useState<boolean[]>([])
   const [page, setPage] = useState(1)
-  const loadedImages = useRef<Set<string>>(new Set())
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const isMobile = useRef<boolean>(false)
 
   const fetchImages = useCallback(async () => {
     try {
@@ -34,58 +34,47 @@ export default function PhotographyPortfolio() {
       }))
 
       setImages(generatedImages)
-      setIsLoading(new Array(generatedImages.length).fill(true))
     } catch (error) {
       console.error('Error fetching images:', error)
     }
-  }, [])
-
-  interface Image {
-    full: string;
-  }
-
-  const loadImage = useCallback((image: Image, index: number) => {
-    if (loadedImages.current.has(image.full)) {
-      return
-    }
-
-    fetch(image.full)
-      .then(response => response.blob())
-      .then(blob => {
-        const img = new window.Image()
-        img.src = URL.createObjectURL(blob)
-        img.onload = () => {
-          loadedImages.current.add(image.full)
-          setIsLoading(prevLoading => {
-            const newLoading = [...prevLoading]
-            newLoading[index] = false
-            return newLoading
-          })
-        }
-      })
   }, [])
 
   useEffect(() => {
     fetchImages()
   }, [fetchImages])
 
-  useEffect(() => {
-    if (images.length > 0) {
-      const startIndex = (page - 1) * IMAGES_PER_PAGE
-      const endIndex = startIndex + IMAGES_PER_PAGE
-      const currentImages = images.slice(startIndex, endIndex)
-
-      currentImages.forEach((image, index) => {
-        if (isLoading[startIndex + index]) {
-          loadImage(image, startIndex + index)
-        }
-      })
-    }
-  }, [images, page, isLoading, loadImage])
-
   const loadMoreImages = () => {
     setPage(prevPage => prevPage + 1)
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    isMobile.current = mediaQuery.matches
+
+    if (isMobile.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            loadMoreImages()
+          }
+        },
+        { threshold: 1.0 }
+      )
+
+      if (loadMoreRef.current) {
+        observer.observe(loadMoreRef.current)
+      }
+
+      return () => {
+        if (loadMoreRef.current) {
+          observer.unobserve(loadMoreRef.current)
+        }
+      }
+    } else {
+      // For desktop, load all images at once
+      setPage(Math.ceil(images.length / IMAGES_PER_PAGE))
+    }
+  }, [loadMoreRef, images.length])
 
   const displayedImages = images.slice(0, page * IMAGES_PER_PAGE)
 
@@ -104,25 +93,15 @@ export default function PhotographyPortfolio() {
             >
               <div className="group aspect-w-4 aspect-h-3">
                 <Image
-                  src={image.placeholder}
-                  alt={`Placeholder Photography ${index + 1}`}
+                  src={image.full}
+                  alt={`Photography ${index + 1}`}
                   fill
                   sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   style={{ objectFit: 'cover' }}
-                  className="blur-sm shadow-sm border border-gray-300"
-                  loading="lazy"
+                  className="transition-transform duration-300 ease-in-out group-hover:scale-110 shadow-sm border border-gray-300"
+                  loading={index < IMAGES_PER_PAGE ? 'eager' : 'lazy'}
+                  priority={index < IMAGES_PER_PAGE} // Set priority for the first set of images
                 />
-                {!isLoading[index] && (
-                  <Image
-                    src={image.full}
-                    alt={`Photography ${index + 1}`}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="transition-transform duration-300 ease-in-out group-hover:scale-110 shadow-sm border border-gray-300"
-                    loading="lazy"
-                  />
-                )}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center">
                   <p className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     View Image
@@ -132,13 +111,9 @@ export default function PhotographyPortfolio() {
             </motion.div>
           ))}
         </div>
-        {displayedImages.length < images.length && (
-          <div className="flex justify-center">
-            <button onClick={loadMoreImages} className="mt-8 px-4 py-2 bg-teal-500 text-white rounded">
-              Load More
-            </button>
-          </div>
-        )}
+        <div ref={loadMoreRef} className="flex justify-center mt-8">
+          {/* Empty div to be observed by IntersectionObserver */}
+        </div>
       </div>
 
       {selectedImage && (

@@ -28,7 +28,7 @@ const ContactPage = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-background text-foreground dotted-background">
       <div className="max-w-lg w-full p-8 border border-border rounded-lg shadow-lg bg-card text-card-foreground">
-        <h1 className="text-center text-2xl font-bold mb-6">Contact Us</h1>
+        <h1 className="text-center text-2xl font-bold mb-6">Contact</h1>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="name" className="block mb-2">Name:</label>
