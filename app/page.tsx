@@ -39,8 +39,8 @@ export default function LandingPage() {
   }, [fullText])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-gray-100 dark dotted-background">
-      <main className="flex flex-col items-center justify-center p-4">
+    <div className="h-screen flex flex-col justify-between bg-background text-gray-100 dark dotted-background">
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
         <motion.h1
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}

@@ -61,13 +61,14 @@ export default function PhotographyPortfolio() {
         { threshold: 1.0 }
       )
 
-      if (loadMoreRef.current) {
-        observer.observe(loadMoreRef.current)
+      const currentLoadMoreRef = loadMoreRef.current
+      if (currentLoadMoreRef) {
+        observer.observe(currentLoadMoreRef)
       }
 
       return () => {
-        if (loadMoreRef.current) {
-          observer.unobserve(loadMoreRef.current)
+        if (currentLoadMoreRef) {
+          observer.unobserve(currentLoadMoreRef)
         }
       }
     } else {
@@ -75,6 +76,16 @@ export default function PhotographyPortfolio() {
       setPage(Math.ceil(images.length / IMAGES_PER_PAGE))
     }
   }, [loadMoreRef, images.length])
+
+  useEffect(() => {
+    // Add the custom class to the body element
+    document.body.classList.add('body-overflow-hidden')
+
+    // Cleanup function to remove the class when the component unmounts
+    return () => {
+      document.body.classList.remove('body-overflow-hidden')
+    }
+  }, [])
 
   const displayedImages = images.slice(0, page * IMAGES_PER_PAGE)
 
