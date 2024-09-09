@@ -54,40 +54,44 @@ export default function PhotographyPortfolio() {
     }
   }, [])
 
-  const loadImage = useCallback((image: any, index) => {
-    const imgStartTime = performance.now()
-
+    interface Image {
+    full: string;
+    // Add other properties if needed
+  }
+  
+  const loadImage = useCallback((image: Image, index: number) => {
+    const imgStartTime = performance.now();
+  
     fetch(image.full)
       .then(response => response.blob())
       .then(blob => {
-        const imgEndTime = performance.now()
-        const fetchTime = (imgEndTime - imgStartTime).toFixed(2)
-        const imgSize = (blob.size / 1024).toFixed(2)
-
-        const img = new window.Image()
-        img.src = URL.createObjectURL(blob)
+        const imgEndTime = performance.now();
+        const fetchTime = (imgEndTime - imgStartTime).toFixed(2);
+        const imgSize = (blob.size / 1024).toFixed(2);
+  
+        const img = new window.Image();
+        img.src = URL.createObjectURL(blob);
         img.onload = () => {
           setLoadingProgress(prevProgress => {
-            const newProgress = [...prevProgress]
-            newProgress[index] = 100
-            return newProgress
-          })
-
+            const newProgress = [...prevProgress];
+            newProgress[index] = 100;
+            return newProgress;
+          });
+  
           setIsLoading(prevLoading => {
-            const newLoading = [...prevLoading]
-            newLoading[index] = false
-            return newLoading
-          })
-
+            const newLoading = [...prevLoading];
+            newLoading[index] = false;
+            return newLoading;
+          });
+  
           setSummary(prevSummary => {
-            const newSummary = new Set(prevSummary)
-            newSummary.add(`Loaded image ${image.full} in ${fetchTime} ms, size: ${imgSize} KB`)
-            return newSummary
-          })
-        }
-      })
-      .catch(error => console.error('Error loading image:', error))
-  }, [])
+            const newSummary = new Set(prevSummary);
+            newSummary.add(`Loaded image ${image.full} in ${fetchTime} ms, size: ${imgSize} KB`);
+            return newSummary;
+          });
+        };
+      });
+  }, []);
 
   useEffect(() => {
     fetchImages()
