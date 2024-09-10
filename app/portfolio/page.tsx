@@ -17,10 +17,12 @@ const supabase = createClient(
 
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [images, setImages] = useState<{ full: string, placeholder: string }[]>([])
+  const [images, setImages] = useState<{ full: string, placeholder: string, name: string }[]>([])
   const [page, setPage] = useState(1)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const isMobile = useRef<boolean>(false)
+  const [longPressedImage, setLongPressedImage] = useState<string | null>(null)
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null)
 
   const fetchImages = useCallback(async () => {
     try {
@@ -33,7 +35,8 @@ export default function PhotographyPortfolio() {
         const publicUrl = supabase.storage.from('dank-pics').getPublicUrl(file.name).data.publicUrl;
         return {
           full: publicUrl,
-          placeholder: `${publicUrl}?w=10&h=10&fit=crop&auto=format`
+          placeholder: `${publicUrl}?w=10&h=10&fit=crop&auto=format`,
+          name: file.name
         };
       });
 
@@ -114,6 +117,31 @@ export default function PhotographyPortfolio() {
     fetchImages()
   }
 
+  const handleLongPressStart = (imageName: string) => {
+    longPressTimeout.current = setTimeout(() => {
+      setLongPressedImage(imageName)
+    }, 1000) // 1 second long press
+  }
+
+  const handleLongPressEnd = () => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current)
+    }
+  }
+
+  const handleDeleteImage = async () => {
+    if (longPressedImage) {
+      try {
+        const { error } = await supabase.storage.from('dank-pics').remove([longPressedImage])
+        if (error) throw error
+        setImages(images.filter(image => image.name !== longPressedImage))
+        setLongPressedImage(null)
+      } catch (error) {
+        console.error('Error deleting image:', error)
+      }
+    }
+  }
+
   const displayedImages = images.slice(0, page * IMAGES_PER_PAGE)
 
   return (
@@ -128,6 +156,9 @@ export default function PhotographyPortfolio() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="relative overflow-hidden rounded-lg shadow-lg"
               onClick={() => setSelectedImage(image.full)}
+              onMouseDown={() => handleLongPressStart(image.name)}
+              onMouseUp={handleLongPressEnd}
+              onMouseLeave={handleLongPressEnd}
             >
               <div className="group aspect-w-4 aspect-h-3">
                 <Image
@@ -154,7 +185,22 @@ export default function PhotographyPortfolio() {
       </div>
 
       {selectedImage && (
-        <ImageOverlay image={selectedImage} onClose={() => setSelectedImage(null)} />
+        <ImageOverlay 
+          image={selectedImage} 
+          onClose={() => setSelectedImage(null)} 
+        />
+      )}
+      
+      {longPressedImage && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-gray-800 p-4 rounded shadow-lg text-white">
+            <p>Are you sure you want to delete this image?</p>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button onClick={() => setLongPressedImage(null)}>Cancel</Button>
+              <Button onClick={handleDeleteImage}>Delete</Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="fixed bottom-4 right-4 flex items-center space-x-2">
