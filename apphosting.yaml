@@ -1,9 +1,11 @@
 env:
   - variable: NEXT_PUBLIC_SUPABASE_URL
-    secret: projects/1063370248157/secrets/NEXT_PUBLIC_SUPABASE_URL
+    secret: STORAGE_URL
     availability:
+      - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    secret: projects/1063370248157/secrets/NEXT_PUBLIC_SUPABASE_ANON_KEY
+    secret: STORAGE_ANON_KEY
     availability:
+      - BUILD
       - RUNTIME
