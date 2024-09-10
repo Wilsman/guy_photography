@@ -4,15 +4,16 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { ImageOverlay } from '../../components/ImageOverlay'
+import { Button } from '../../components/ui/button'
+import { createClient } from '@supabase/supabase-js'
 
-type ImageFile = {
-  name: string
-  type: string
-}
 
 const IMAGES_PER_PAGE = 3
-const REPO_URL = 'https://api.github.com/repos/Wilsman/guy_photography/contents/public/images'
-const BASE_URL = 'https://raw.githubusercontent.com/Wilsman/guy_photography/master/public/images'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -23,15 +24,18 @@ export default function PhotographyPortfolio() {
 
   const fetchImages = useCallback(async () => {
     try {
-      const response = await fetch(REPO_URL)
-      const data: ImageFile[] = await response.json()
+      const { data, error } = await supabase.storage.from('dank-pics').list()
+      if (error) throw error
 
-      const imageFiles = data.filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/i))
+      const imageFiles = data.filter(file => file.name.match(/\.(jpg|jpeg|png|gif)$/i))
 
-      const generatedImages = imageFiles.map(file => ({
-        full: `${BASE_URL}/${file.name}`,
-        placeholder: `${BASE_URL}/${file.name}?w=10&h=10&fit=crop&auto=format`
-      }))
+      const generatedImages = imageFiles.map(file => {
+        const publicUrl = supabase.storage.from('dank-pics').getPublicUrl(file.name).data.publicUrl;
+        return {
+          full: publicUrl,
+          placeholder: `${publicUrl}?w=10&h=10&fit=crop&auto=format`
+        };
+      });
 
       setImages(generatedImages)
     } catch (error) {
@@ -40,7 +44,13 @@ export default function PhotographyPortfolio() {
   }, [])
 
   useEffect(() => {
-    fetchImages()
+    fetchImages();
+  
+    const intervalId = setInterval(fetchImages, 5000); // Poll every 5 seconds
+  
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [fetchImages])
 
   const loadMoreImages = () => {
@@ -72,20 +82,37 @@ export default function PhotographyPortfolio() {
         }
       }
     } else {
-      // For desktop, load all images at once
       setPage(Math.ceil(images.length / IMAGES_PER_PAGE))
     }
   }, [loadMoreRef, images.length])
 
   useEffect(() => {
-    // Add the custom class to the body element
     document.body.classList.add('body-overflow-hidden')
 
-    // Cleanup function to remove the class when the component unmounts
     return () => {
       document.body.classList.remove('body-overflow-hidden')
     }
   }, [])
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) return
+  
+    // Convert FileList to an array
+    const filesArray = Array.from(files)
+  
+    for (const file of filesArray) {
+      const { data, error } = await supabase.storage.from('dank-pics').upload(file.name, file)
+      if (error) {
+        console.error('Error uploading file:', error)
+      } else {
+        console.log('File uploaded successfully:', data)
+      }
+    }
+
+    // Fetch images after upload is complete
+    fetchImages()
+  }
 
   const displayedImages = images.slice(0, page * IMAGES_PER_PAGE)
 
@@ -111,7 +138,7 @@ export default function PhotographyPortfolio() {
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 ease-in-out group-hover:scale-110 shadow-sm border border-gray-300"
                   loading={index < IMAGES_PER_PAGE ? 'eager' : 'lazy'}
-                  priority={index < IMAGES_PER_PAGE} // Set priority for the first set of images
+                  priority={index < IMAGES_PER_PAGE}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-center justify-center">
                   <p className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -123,13 +150,21 @@ export default function PhotographyPortfolio() {
           ))}
         </div>
         <div ref={loadMoreRef} className="flex justify-center mt-8">
-          {/* Empty div to be observed by IntersectionObserver */}
         </div>
       </div>
 
       {selectedImage && (
         <ImageOverlay image={selectedImage} onClose={() => setSelectedImage(null)} />
       )}
+
+      <div className="fixed bottom-4 right-4 flex items-center space-x-2">
+        <input type="file" multiple className="hidden" id="fileInput" onChange={handleFileUpload} />
+        <Button asChild>
+          <label htmlFor="fileInput" className="cursor-pointer">
+            Upload Images
+          </label>
+        </Button>
+      </div>
     </div>
   )
 }

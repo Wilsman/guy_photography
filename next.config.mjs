@@ -10,9 +10,9 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "raw.githubusercontent.com",
+        hostname: "amkcweumsxgqoipltwzt.supabase.co",
         port: "",
-        pathname: "/Wilsman/guy_photography/master/public/images/**",
+        pathname: "/**",
       },
     ],
   },
