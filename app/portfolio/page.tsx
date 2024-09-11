@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { ImageOverlay } from '../../components/ImageOverlay'
-import { Button } from '../../components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Trash2 } from 'react-feather';
 import supabase from '../supabaseClient' // Import the Supabase client
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast" // Import the useToast hook
 
 const IMAGES_PER_PAGE = 3
 
@@ -16,6 +18,7 @@ export default function PhotographyPortfolio() {
   const [page, setPage] = useState(1)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const isMobile = useRef<boolean>(false)
+  const { toast } = useToast() // Initialize the toast function
 
   const fetchImages = useCallback(async () => {
     try {
@@ -96,6 +99,7 @@ export default function PhotographyPortfolio() {
   
     // Convert FileList to an array
     const filesArray = Array.from(files)
+    const uploadedFiles: string[] = []
   
     for (const file of filesArray) {
       const { data, error } = await supabase.storage.from('dank-pics').upload(file.name, file)
@@ -103,11 +107,19 @@ export default function PhotographyPortfolio() {
         console.error('Error uploading file:', error)
       } else {
         console.log('File uploaded successfully:', data)
+        uploadedFiles.push(file.name)
       }
     }
 
     // Fetch images after upload is complete
     fetchImages()
+
+    // Show toast notification
+    toast({
+      variant: 'default',
+      title: `${uploadedFiles.length} images uploaded successfully`,
+      description: `Uploaded images: ${uploadedFiles.join(', ')}`
+    })
   }
 
   const handleDeleteImage = async (imageName: string) => {
@@ -118,6 +130,14 @@ export default function PhotographyPortfolio() {
       
       // Fetch images after upload is complete
       fetchImages()
+
+      // Show toast notification
+      toast({
+        variant: 'destructive',
+        title: `Image deleted successfully`,
+        description: `Deleted image: ${imageName}`
+
+      })
     } catch (error) {
       console.error('Error deleting image:', error)
     }
@@ -195,6 +215,8 @@ export default function PhotographyPortfolio() {
           </label>
         </Button>
       </div>
+
+      <Toaster />
     </div>
   )
 }
