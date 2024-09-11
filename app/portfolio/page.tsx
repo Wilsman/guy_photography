@@ -5,15 +5,10 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { ImageOverlay } from '../../components/ImageOverlay'
 import { Button } from '../../components/ui/button'
-import { createClient } from '@supabase/supabase-js'
-
+import { Trash2 } from 'react-feather';
+import supabase from '../supabaseClient' // Import the Supabase client
 
 const IMAGES_PER_PAGE = 3
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 export default function PhotographyPortfolio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -21,8 +16,6 @@ export default function PhotographyPortfolio() {
   const [page, setPage] = useState(1)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const isMobile = useRef<boolean>(false)
-  const [longPressedImage, setLongPressedImage] = useState<string | null>(null)
-  const longPressTimeout = useRef<NodeJS.Timeout | null>(null)
 
   const fetchImages = useCallback(async () => {
     try {
@@ -117,28 +110,22 @@ export default function PhotographyPortfolio() {
     fetchImages()
   }
 
-  const handleLongPressStart = (imageName: string) => {
-    longPressTimeout.current = setTimeout(() => {
-      setLongPressedImage(imageName)
-    }, 1000) // 1 second long press
-  }
-
-  const handleLongPressEnd = () => {
-    if (longPressTimeout.current) {
-      clearTimeout(longPressTimeout.current)
+  const handleDeleteImage = async (imageName: string) => {
+    try {
+      const { error } = await supabase.storage.from('dank-pics').remove([imageName])
+      if (error) throw error
+      setImages(images.filter(image => image.name !== imageName))
+      
+      // Fetch images after upload is complete
+      fetchImages()
+    } catch (error) {
+      console.error('Error deleting image:', error)
     }
   }
 
-  const handleDeleteImage = async () => {
-    if (longPressedImage) {
-      try {
-        const { error } = await supabase.storage.from('dank-pics').remove([longPressedImage])
-        if (error) throw error
-        setImages(images.filter(image => image.name !== longPressedImage))
-        setLongPressedImage(null)
-      } catch (error) {
-        console.error('Error deleting image:', error)
-      }
+  const disableContextMenu = (event: React.MouseEvent) => {
+    if (isMobile.current) {
+      event.preventDefault()
     }
   }
 
@@ -156,9 +143,7 @@ export default function PhotographyPortfolio() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="relative overflow-hidden rounded-lg shadow-lg"
               onClick={() => setSelectedImage(image.full)}
-              onMouseDown={() => handleLongPressStart(image.name)}
-              onMouseUp={handleLongPressEnd}
-              onMouseLeave={handleLongPressEnd}
+              onContextMenu={disableContextMenu}
             >
               <div className="group aspect-w-4 aspect-h-3">
                 <Image
@@ -176,6 +161,17 @@ export default function PhotographyPortfolio() {
                     View Image
                   </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 opacity-50 group-hover:opacity-100 transition-opacity duration-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteImage(image.name);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-gray-200 hover:text-red-500 transition-colors duration-300" />
+                </Button>
               </div>
             </motion.div>
           ))}
@@ -189,18 +185,6 @@ export default function PhotographyPortfolio() {
           image={selectedImage} 
           onClose={() => setSelectedImage(null)} 
         />
-      )}
-      
-      {longPressedImage && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-gray-800 p-4 rounded shadow-lg text-white">
-            <p>Are you sure you want to delete this image?</p>
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button onClick={() => setLongPressedImage(null)}>Cancel</Button>
-              <Button onClick={handleDeleteImage}>Delete</Button>
-            </div>
-          </div>
-        </div>
       )}
 
       <div className="fixed bottom-4 right-4 flex items-center space-x-2">
